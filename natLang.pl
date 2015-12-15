@@ -57,7 +57,7 @@ splitAtConj(Conj, S, Rest):-
 % Identify the actions (verbs) that an individual actor performed in a 
 % conjunction of sentences. 
 actions( Actor, Text, As ):-
-  listOfSentences( Text, Sentences), verblist(Actor, Sentences, As),!.
+  listOfSentences( Text, Sentences), verbList(Actor, Sentences, As),!.
 
 % Generates a list of separate sentences from a conjunct, with the
 % conjuncts removed.
@@ -84,7 +84,7 @@ verbList( Actor, [], [] ).
 
 verbList( Actor,[Sentence|Sentences], List ):-
   (verbFromSentence( Actor, Sentence, [Verb|_]), addToList( List, Verb, Next), 
-  verblist( Actor, Sentences, Next)); verblist( Actor, Sentences, List ).
+  verbList( Actor, Sentences, Next)); verbList( Actor, Sentences, List ).
 
 addToList( [H|T], Item, T ):-
   H=Item.
