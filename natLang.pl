@@ -25,7 +25,13 @@ verb([chews]).
 verb([kicks]).
 
 conjunct([and]).
+vowel(a).
+vowel(e).
+vowel(i).
+vowel(o).
+vowel(u).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Question 1a %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % counts the number of longest sentences between conjuncts
 count_sentences( Conj, Accum ):-
   sentence_counter( Conj, Accum, 0 ),!.
@@ -45,11 +51,21 @@ sentence_counter(Conj, Accum, Count):-
 splitAtConj(Conj, S, Rest):-
   sentence(S), conjunct([H]), append(S, [H|Rest], Conj).
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Question 1b %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Identify the actions (verbs) that an individual actor performed in a 
+% conjunction of sentences. 
+actions( Actor, Text, As ):-
+  listOfSentences( Text, Sentences), verblist(Actor, Sentences, As),!.
+
+% Generates a list of separate sentences from a conjunct, with the
+% conjuncts removed.
 listOfSentences( Conj, [HeadS|TailS] ):-
   sentence(Conj), HeadS = Conj, TailS = [].
+
 listOfSentences( Conj, [HeadS|TailS] ):-
   splitAtConj( Conj, S, Rest), HeadS = S, listOfSentences( Rest, TailS ).
-
 
 % From a single sentence, extracts the the verb which the Actor performs
 verbFromSentence( Actor, Sentence, Verb ):-     
@@ -62,14 +78,41 @@ verbFromSentence( Actor, Sentence, Verb ):-
   noun(Noun),
   (Noun = [Actor] -> Verb = V).
 
-actions( Actor, Text, As ):-
-  listOfSentences( Text, Sentences), verblist(Actor, Sentences, As),!.
+% From a list of sentences, extract the verb which an actor performed, and
+% add this actor as the next item to a list of verbs the actor performed
+verbList( Actor, [], [] ).
 
-verblist( Actor, [], [] ).
-verblist( Actor,[Sentence|Sentences], List ):-
+verbList( Actor,[Sentence|Sentences], List ):-
   (verbFromSentence( Actor, Sentence, [Verb|_]), addToList( List, Verb, Next), 
   verblist( Actor, Sentences, Next)); verblist( Actor, Sentences, List ).
 
 addToList( [H|T], Item, T ):-
   H=Item.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Question 2a %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% noun_phrase_better, finds the instances of noun phrases, where
+% indefinite articles ending in consonants are matched with nouns starting with
+% vowels. 
+noun_phrase_better(NP):-
+  article(A), noun(N), append(A, N, NP), 
+  flattenList(A, FlatA), atom_chars(FlatA, AChs), 
+  flattenList(N, FlatN), atom_chars(FlatN, NChs),
+  checkVowel( AChs, NChs), NP \= [a,grass].% remove NP with collective 
+                                           % and indefinite article
+checkVowel( AChs, [NounH|NounT] ):-
+ (lastElement(AChs, Ch),(\+vowel(Ch); Ch = e), vowel(NounH));
+ (lastElement(AChs, Ch), vowel(Ch), \+vowel(NounH)).
+
+flattenList( [H|T], H).
+
+lastElement([H|T], Last) :-
+  last_(T, H, Last).
+ 
+last_([], Last, Last).
+
+last_([H|T], _, Last) :-
+  last_(T, H, Last).
+   
   
