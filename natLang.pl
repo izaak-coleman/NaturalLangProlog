@@ -135,7 +135,7 @@ last_([H|T], _, Last) :-
 % This conjunction must take for form of a list. Fails if 
 % conjunction is not of this form. 
 cadvs( Adverbs ):-
-  accumulateAds( Adverbs, []).
+  accumulateAds( Adverbs, []), Adverbs \= [].
 
 % accumulateAds set of predicates take a conjunction of adverbs, fails if they
 % are not of the form above, and ensures that no repeats of adverbs are 
