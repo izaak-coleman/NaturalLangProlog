@@ -25,11 +25,17 @@ verb([chews]).
 verb([kicks]).
 
 conjunct([and]).
+conjunct([',']).
 vowel(a).
 vowel(e).
 vowel(i).
 vowel(o).
 vowel(u).
+
+adverb([slowly]).
+adverb([deliberately]).
+adverb([merrily]).
+adverb([sweetly]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Question 1a %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % counts the number of longest sentences between conjuncts
@@ -99,8 +105,8 @@ noun_phrase_better(NP):-
   article(A), noun(N), append(A, N, NP), 
   flattenList(A, FlatA), atom_chars(FlatA, AChs), 
   flattenList(N, FlatN), atom_chars(FlatN, NChs),
-  checkVowel( AChs, NChs), NP \= [a,grass].% remove NP with collective 
-                                           % and indefinite article
+  checkVowel( AChs, NChs).
+
 checkVowel( AChs, [NounH|NounT] ):-
  (lastElement(AChs, Ch),(\+vowel(Ch); Ch = e), vowel(NounH));
  (lastElement(AChs, Ch), vowel(Ch), \+vowel(NounH)).
@@ -115,4 +121,48 @@ last_([], Last, Last).
 last_([H|T], _, Last) :-
   last_(T, H, Last).
    
+  
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Question 3a %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%validAdConj( Adverbs ):-
+%  splitAdverbs( Adverbs, Adv, Rest ),
+%  addToList( PrevAds, Ad, End),
+%  notPreviouslyUsed( PrevAds).
+
+cadvs( Adverbs ):-
+  accumulateAds( Adverbs, []).
+
+accumulateAds( [], PrevAds).
+
+accumulateAds( Adverbs , [] ):-
+  commaSplitAdverbs( Adverbs, Adv, Rest ), 
+  accumulateAds( Rest, Adv ).
+
+accumulateAds( Adverbs, PrevAds):-
+  (commaSplitAdverbs( Adverbs, [Adv|_], Rest );
+   andSplitAdverbs( Adverbs, [Adv|_], Rest) ),
+  \+member(Adv, PrevAds), NextPrevAds = [Adv|PrevAds], 
+  accumulateAds( Rest, NextPrevAds ).
+
+commaSplitAdverbs(Adverbs, Adv, Rest):-
+  adverb(Adv), H = ',', append(Adv, [H|Rest], Adverbs),
+  countItems( Rest, Accum, 0), Accum > 1.
+
+andSplitAdverbs(Adverbs, Adv, Rest):-
+  (adverb(Adv), H = and, append(Adv, [H|Rest], Adverbs),
+  countItems( Rest, Accum, 0), Accum = 1);
+   adverb(Adverbs), Adv = Adverbs, Rest = [].
+
+%countAdverbs([], Accum, Count):-
+%  Accum = Count.
+%countAdverbs(Adverbs, Accum, Count):-
+%  (splitAdverbs(Adverbs, _, Rest); adverb(Adverbs)), 
+%  NewCount is Count+1,
+%  countAdverbs( Rest, Accum, NewCount),!.
+
+countItems( [], Accum, Count ):-
+  Accum = Count.
+
+countItems( [Adverb|Rest], Accum, Count):-
+  NewCount is Count+1, countItems(Rest, Accum, NewCount).
   
