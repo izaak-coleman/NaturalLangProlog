@@ -24,8 +24,6 @@ verb([sings]).
 verb([chews]).
 verb([kicks]).
 
-conjunct([and]).
-conjunct([',']).
 vowel(a).
 vowel(e).
 vowel(i).
@@ -55,7 +53,7 @@ sentence_counter(Conj, Accum, Count):-
 % sentences, headed by the previous conjunct. Removes this conjunct and then
 % returns the sentence, and the remaining conjunct of sentences. 
 splitAtConj(Conj, S, Rest):-
-  sentence(S), conjunct([H]), append(S, [H|Rest], Conj).
+  sentence(S), H = and, append(S, [H|Rest], Conj).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Question 1b %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -101,21 +99,29 @@ addToList( [H|T], Item, T ):-
 % noun_phrase_better, finds the instances of noun phrases, where
 % indefinite articles ending in consonants are matched with nouns starting with
 % vowels. 
+% Note: a grass left in, as correct in some lexicons
 noun_phrase_better(NP):-
   article(A), noun(N), append(A, N, NP), 
   flattenList(A, FlatA), atom_chars(FlatA, AChs), 
   flattenList(N, FlatN), atom_chars(FlatN, NChs),
   checkVowel( AChs, NChs).
 
+% checkVowel finds the last character of an article, and the first character of a noun, and 
+% passes if:
+% -- last char of article is vowel, and first char of noun is not vowel.
+% -- last char of article is not vowel, or is vowel e, and first char of noun
+%    vowel
 checkVowel( AChs, [NounH|NounT] ):-
  (lastElement(AChs, Ch),(\+vowel(Ch); Ch = e), vowel(NounH));
  (lastElement(AChs, Ch), vowel(Ch), \+vowel(NounH)).
 
+% Extracts the element from a single element list.
 flattenList( [H|T], H).
 
+% Returns the last element in a list as Last.
 lastElement([H|T], Last) :-
   last_(T, H, Last).
- 
+
 last_([], Last, Last).
 
 last_([H|T], _, Last) :-
@@ -124,42 +130,48 @@ last_([H|T], _, Last) :-
   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Question 3a,b %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%validAdConj( Adverbs ):-
-%  splitAdverbs( Adverbs, Adv, Rest ),
-%  addToList( PrevAds, Ad, End),
-%  notPreviouslyUsed( PrevAds).
-
+% cadvs parses a conjunction of adverbs of the form: adverb1, adverb2 and adverb3; 
+%                                              adverb1 and adverb2
+% This conjunction must take for form of a list. Fails if 
+% conjunction is not of this form. 
 cadvs( Adverbs ):-
   accumulateAds( Adverbs, []).
 
-accumulateAds( [], PrevAds).
+% accumulateAds set of predicates take a conjunction of adverbs, fails if they
+% are not of the form above, and ensures that no repeats of adverbs are 
+% identified.  Recurses through the conjunction, accumulating the previously 
+% used adverbs, and checks each new element of the conjuction has not been used
+% before.
+accumulateAds( [], PrevAds).       % Base case. All Advbs in Conjunction checked
 
-accumulateAds( Adverbs , [] ):-
+accumulateAds( Adverbs , [] ):-    % Seed the accumulating list with first advb
   commaSplitAdverbs( Adverbs, Adv, Rest ), 
   accumulateAds( Rest, Adv ).
 
-accumulateAds( Adverbs, PrevAds):-
+accumulateAds( Adverbs, PrevAds):- % Check each new advb against prev advbs
   (commaSplitAdverbs( Adverbs, [Adv|_], Rest );
    andSplitAdverbs( Adverbs, [Adv|_], Rest) ),
   \+member(Adv, PrevAds), NextPrevAds = [Adv|PrevAds], 
   accumulateAds( Rest, NextPrevAds ).
 
+
+% commaSplitAdverbs splits a conjunction of the form "adverb1, adverb2, adverb3, ..."
+% into one variable "adverb1" and the remaining adverbs "adverb2, adverb3, ..."
+% the conjunt comma is discared. Also ensures that a comma conjunction 
+% cannot be used between the last two adverbs.
+
 commaSplitAdverbs(Adverbs, Adv, Rest):-
   adverb(Adv), H = ',', append(Adv, [H|Rest], Adverbs),
-  countItems( Rest, Accum, 0), Accum > 1.
+  countItems( Rest, Accum, 0), Accum > 1. % fail if comma is before last element
 
+% Performs similar functionality to commaSplitAdverbs, but for and conjunct.
+% Ensures and is used as a conjunct only between penultimate and last adverbs.
 andSplitAdverbs(Adverbs, Adv, Rest):-
   (adverb(Adv), H = and, append(Adv, [H|Rest], Adverbs),
-  countItems( Rest, Accum, 0), Accum = 1);
-   adverb(Adverbs), Adv = Adverbs, Rest = [].
+  countItems( Rest, Accum, 0), Accum = 1);    % fail if and is not before last element
+   adverb(Adverbs), Adv = Adverbs, Rest = []. % Called if only one adverb in Adverbs
 
-%countAdverbs([], Accum, Count):-
-%  Accum = Count.
-%countAdverbs(Adverbs, Accum, Count):-
-%  (splitAdverbs(Adverbs, _, Rest); adverb(Adverbs)), 
-%  NewCount is Count+1,
-%  countAdverbs( Rest, Accum, NewCount),!.
-
+% countItems, returns a count of the number of elements in a list
 countItems( [], Accum, Count ):-
   Accum = Count.
 
@@ -168,6 +180,9 @@ countItems( [Adverb|Rest], Accum, Count):-
   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Question 3c %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% verb_phrase_better passes with verb phrases containing, correct
+% noun phrase pairing, correct noun phrase pairing headed by a correctly
+% formed conjunct of adverbs
 verb_phrase_better(VP):-
   verb(VP);
   possible_verb_one(VP);
@@ -185,5 +200,8 @@ possible_verb_three(VP):-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Question 3d %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% sentence_better passes when correctly formed noun phrases are followed by
+% a correctly formed verb phrase, with or without a conjunction of adverbs
+% preceeding the verb
 sentence_better(Sentence):-
   append(NP, VP, Sentence), noun_phrase_better(NP), verb_phrase_better(VP).
