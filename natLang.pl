@@ -122,7 +122,7 @@ last_([H|T], _, Last) :-
   last_(T, H, Last).
    
   
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Question 3a %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Question 3a,b %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %validAdConj( Adverbs ):-
 %  splitAdverbs( Adverbs, Adv, Rest ),
@@ -166,3 +166,19 @@ countItems( [], Accum, Count ):-
 countItems( [Adverb|Rest], Accum, Count):-
   NewCount is Count+1, countItems(Rest, Accum, NewCount).
   
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Question 3c %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+verb_phrase_better(VP):-
+  verb(VP);
+  possible_verb_one(VP);
+  possible_verb_two(VP);
+  possible_verb_three(VP).
+
+possible_verb_one(VP):-
+  append(V, NP, VP), verb(V), noun_phrase_better(NP).
+
+possible_verb_two(VP):-
+  append(Cads, V, VP), cadvs(Cads), verb(V).
+
+possible_verb_three(VP):-
+  append(Cads, VNP, VP), cadvs(Cads), possible_verb_one(VNP).
