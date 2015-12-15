@@ -182,3 +182,8 @@ possible_verb_two(VP):-
 
 possible_verb_three(VP):-
   append(Cads, VNP, VP), cadvs(Cads), possible_verb_one(VNP).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Question 3d %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+sentence_better(Sentence):-
+  append(NP, VP, Sentence), noun_phrase_better(NP), verb_phrase_better(VP).
